@@ -1,31 +1,70 @@
-import * as React from 'react';
+import React, { useCallback, useState } from 'react';
+import { TextInput, View } from 'react-native';
+import RuStorePush from 'react-native-rustore-push';
 
-import { StyleSheet, View, Text } from 'react-native';
-import { multiply } from 'react-native-rustore-push';
+import Button from './Button';
+import LogsContainer, { ItemPropsTypes } from './LogsContainer';
 
-export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
+const App: React.FC = () => {
+    const [projectID, setProjectID] = useState('hURyaJlsZjVlkYAb27vd54L6G0ptf1HR');
+    const [isInit, setIsInit] = useState(false);
+    const [logs, setLogs] = useState<ItemPropsTypes[]>([]);
 
-  React.useEffect(() => {
-    multiply(3, 7).then(setResult);
-  }, []);
+    const addLog = (msg: string) => {
+        setLogs((prev) => [...prev, {
+            date: new Date().getTime(),
+            text: msg,
+        }]);
+    };
 
-  return (
-    <View style={styles.container}>
-      <Text>Result: {result}</Text>
-    </View>
-  );
-}
+    const onInit = useCallback(async () => {
+        const res = await RuStorePush.init(projectID);
+        if (res !== null) {
+            addLog(res);
+            return;
+        }
+        setIsInit(true);
+        addLog('INITIALIZED');
+    }, []);
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  box: {
-    width: 60,
-    height: 60,
-    marginVertical: 20,
-  },
-});
+    const onGetToken = useCallback(async () => {
+        const res = await RuStorePush.getToken();
+        if (res == null) return;
+        addLog(res);
+    }, []);
+    
+    const onCheck = useCallback(async () => {
+        const res = await RuStorePush.check();
+        if (res == null) return;
+        addLog(res);
+    }, []);
+    
+    const clearLogs = useCallback(() => {
+        setLogs([]);
+    }, []);
+
+    const onDelete = useCallback(async () => {
+        const res = await RuStorePush.deleteToken();
+        if (res == null) return;
+        addLog(res);
+    }, []);
+
+    return <View style={{flex: 1, backgroundColor: '#ffffff'}}>
+        <TextInput
+            value={projectID}
+            onChangeText={setProjectID}
+            style={{borderWidth: 1, margin: 16, borderRadius: 8, paddingHorizontal: 12}}
+            placeholder='Project ID...'
+        />
+        <View style={{alignItems: 'center', height: 300, justifyContent: 'space-between'}}>
+            <Button onPress={onInit} title='Инициализировать SDK' disabled={isInit || projectID.length === 0} />
+            <Button onPress={onGetToken} title='Запросить токен' disabled={!isInit} />
+            <Button onPress={onCheck} title='Проверка возможности получения пуш-уведомлений' disabled={!isInit} />
+            <Button onPress={clearLogs} title='Очистить логи' />
+            <Button onPress={onDelete} title='Удалить токен' disabled={!isInit} />
+        </View>
+        <LogsContainer logs={logs} />
+    </View>;
+};
+
+export default App;

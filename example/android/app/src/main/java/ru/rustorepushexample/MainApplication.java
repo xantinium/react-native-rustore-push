@@ -1,4 +1,4 @@
-package com.rustorepushexample;
+package ru.rustorepushexample;
 
 import android.app.Application;
 import com.facebook.react.PackageList;
