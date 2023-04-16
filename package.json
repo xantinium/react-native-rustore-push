@@ -24,7 +24,6 @@
   "scripts": {
     "prepack": "bob build",
     "release": "release-it",
-    "example": "yarn --cwd example",
     "clean": "del-cli android/build example/android/build example/android/app/build"
   },
   "keywords": [

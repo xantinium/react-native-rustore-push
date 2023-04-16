@@ -16,6 +16,8 @@ jsconfig.json
 .settings
 local.properties
 android.iml
+android/build/
+example/android/app/build/
 
 # Ruby
 example/vendor/
