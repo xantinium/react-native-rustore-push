@@ -1,6 +1,6 @@
 buildscript {
   // Buildscript is evaluated before everything else so we can't use getExtOrDefault
-  def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["RustorePush_kotlinVersion"]
+  def kotlin_version = rootProject.ext.has("kotlinVersion") ? rootProject.ext.get("kotlinVersion") : project.properties["RuStorePush_kotlinVersion"]
 
   repositories {
     google()
@@ -29,11 +29,11 @@ if (isNewArchitectureEnabled()) {
 }
 
 def getExtOrDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["RustorePush_" + name]
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["RuStorePush_" + name]
 }
 
 def getExtOrIntegerDefault(name) {
-  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["RustorePush_" + name]).toInteger()
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["RuStorePush_" + name]).toInteger()
 }
 
 android {
@@ -64,6 +64,9 @@ android {
 repositories {
   mavenCentral()
   google()
+  maven {
+      url = uri("https://artifactory-external.vkpartner.ru/artifactory/maven")
+  }
 }
 
 def kotlin_version = getExtOrDefault("kotlinVersion")
@@ -79,7 +82,7 @@ dependencies {
 if (isNewArchitectureEnabled()) {
   react {
     jsRootDir = file("../src/")
-    libraryName = "RustorePush"
-    codegenJavaPackageName = "com.rustorepush"
+    libraryName = "RuStorePush"
+    codegenJavaPackageName = "ru.reactnativerustorepush"
   }
 }
