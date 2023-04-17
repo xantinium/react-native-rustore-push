@@ -21,8 +21,7 @@ def isNewArchitectureEnabled() {
 apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
-
-def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
+// def appProject = rootProject.allprojects.find { it.plugins.hasPlugin('com.android.application') }
 
 if (isNewArchitectureEnabled()) {
   apply plugin: "com.facebook.react"
@@ -61,11 +60,15 @@ android {
 
 }
 
-repositories {
-  mavenCentral()
-  google()
-  maven {
-      url = uri("https://artifactory-external.vkpartner.ru/artifactory/maven")
+allprojects {
+  repositories {
+    mavenCentral()
+    maven {
+      url "https://artifactory-external.vkpartner.ru/artifactory/maven"
+    }
+  }
+  dependencies {
+    implementation("ru.rustore.sdk:pushclient:0.1.7")
   }
 }
 
@@ -81,7 +84,7 @@ dependencies {
 
 if (isNewArchitectureEnabled()) {
   react {
-    jsRootDir = file("../src/")
+    jsRootDir = file("../lib/src/")
     libraryName = "RuStorePush"
     codegenJavaPackageName = "ru.reactnativerustorepush"
   }

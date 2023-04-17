@@ -6,7 +6,7 @@ const LINKING_ERROR =
   '- You are not using Expo Go\n';
 
 const RuStorePushSDK = NativeModules.RuStorePush
-  ? NativeModules.RustorePush
+  ? NativeModules.RuStorePush
   : new Proxy(
       {},
       {

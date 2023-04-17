@@ -25,7 +25,7 @@ const App: React.FC = () => {
         }
         setIsInit(true);
         addLog('INITIALIZED');
-    }, []);
+    }, [projectID]);
 
     const onGetToken = useCallback(async () => {
         const res = await RuStorePush.getToken();
@@ -53,7 +53,7 @@ const App: React.FC = () => {
         <TextInput
             value={projectID}
             onChangeText={setProjectID}
-            style={{borderWidth: 1, margin: 16, borderRadius: 8, paddingHorizontal: 12}}
+            style={{borderWidth: 1, margin: 16, borderRadius: 8, paddingHorizontal: 12, color: '#000000'}}
             placeholder='Project ID...'
         />
         <View style={{alignItems: 'center', height: 300, justifyContent: 'space-between'}}>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Dimensions, Pressable, Text, View } from 'react-native';
 
 interface ButtonPropsTypes {
     title: string;
@@ -13,7 +13,7 @@ const Button: React.FC<ButtonPropsTypes> = (props) => {
     return <View style={{borderRadius: 8, overflow: 'hidden'}}>
         <Pressable
             android_ripple={{color: '#888888'}}
-            style={{backgroundColor: 'cyan', width: 200, paddingVertical: 12, borderRadius: 8, opacity: disabled ? 0.4 : 1}}
+            style={{backgroundColor: 'cyan', width: Dimensions.get('screen').width - 32, paddingVertical: 12, borderRadius: 8, opacity: disabled ? 0.4 : 1}}
             onPress={onPress}
             disabled={disabled}
         >
