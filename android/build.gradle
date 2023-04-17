@@ -60,15 +60,11 @@ android {
 
 }
 
-allprojects {
-  repositories {
-    mavenCentral()
-    maven {
-      url "https://artifactory-external.vkpartner.ru/artifactory/maven"
-    }
-  }
-  dependencies {
-    implementation("ru.rustore.sdk:pushclient:0.1.7")
+repositories {
+  google()
+  mavenCentral()
+  maven {
+    url "$rootDir/../node_modules/react-native/android"
   }
 }
 
@@ -80,6 +76,7 @@ dependencies {
   //noinspection GradleDynamicVersion
   implementation "com.facebook.react:react-native:+"
   implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+  implementation "ru.rustore.sdk:pushclient:0.1.7"
 }
 
 if (isNewArchitectureEnabled()) {

@@ -1,10 +1,15 @@
 package ru.reactnativerustorepush
 
+import android.content.Intent
+import android.content.Context
 import android.app.Application
+import android.content.IntentFilter
+import android.content.BroadcastReceiver
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.Promise
+import com.facebook.react.modules.core.DeviceEventManagerModule
 
 import ru.rustore.sdk.pushclient.RuStorePushClient
 
@@ -12,9 +17,21 @@ class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBas
 
 	var ctx: ReactApplicationContext? = null
 
-	override fun getName(): String {
-		return NAME
-	}
+    fun log(msg: String) {
+        var context = ctx
+        if (context == null) return
+        var ee = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+        ee.emit(PUSH_LOGGER_TAG, msg)
+    }
+
+    val receiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val data = intent.getStringExtra("data")
+            if (data != null) {
+                log(data)
+            }
+        }
+    }
 
 	@ReactMethod
 	fun init(project_id: String, promise: Promise) {
@@ -33,7 +50,7 @@ class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBas
             promise.resolve("APP_NOT_FOUND")
             return
         }
-        // context.registerReceiver(receiver, IntentFilter("MessagingService"))
+        context.registerReceiver(receiver, IntentFilter("MessagingService"))
         RuStorePushClient.init(
             application = app,
             projectId = project_id,
@@ -42,7 +59,10 @@ class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBas
         promise.resolve(null)
 	}
 
+    override fun getName() = NAME
+
 	companion object {
 		const val NAME = "RuStorePush"
+        const val PUSH_LOGGER_TAG = "PushLogger"
 	}
 }

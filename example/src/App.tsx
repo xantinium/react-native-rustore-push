@@ -1,9 +1,15 @@
 import React, { useCallback, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import RuStorePush from 'react-native-rustore-push';
+import * as Sentry from '@sentry/react-native';
 
 import Button from './Button';
 import LogsContainer, { ItemPropsTypes } from './LogsContainer';
+
+Sentry.init({ 
+    dsn: 'https://a16e365074464f1ca8b727569208a105@o1128349.ingest.sentry.io/4505031220461568', 
+});
+
 
 const App: React.FC = () => {
     const [projectID, setProjectID] = useState('hURyaJlsZjVlkYAb27vd54L6G0ptf1HR');
@@ -67,4 +73,4 @@ const App: React.FC = () => {
     </View>;
 };
 
-export default App;
+export default Sentry.wrap(App);
