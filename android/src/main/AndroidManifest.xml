@@ -7,7 +7,7 @@
 
     <application>
         <service
-            android:name=".MessagingService"
+            android:name=".deps.MessagingService"
             android:exported="true"
             tools:ignore="ExportedService">
             <intent-filter>

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { TextInput, View } from 'react-native';
 import RuStorePush from 'react-native-rustore-push';
 import * as Sentry from '@sentry/react-native';
@@ -12,7 +12,7 @@ Sentry.init({
 
 
 const App: React.FC = () => {
-    const [projectID, setProjectID] = useState('hURyaJlsZjVlkYAb27vd54L6G0ptf1HR');
+    const [projectID, setProjectID] = useState('M5Di1B5g0C5fHlKCe4oUnXZGtFFMJhMu');
     const [isInit, setIsInit] = useState(false);
     const [logs, setLogs] = useState<ItemPropsTypes[]>([]);
 
@@ -35,12 +35,14 @@ const App: React.FC = () => {
 
     const onGetToken = useCallback(async () => {
         const res = await RuStorePush.getToken();
+        console.log(res);
         if (res == null) return;
         addLog(res);
     }, []);
     
     const onCheck = useCallback(async () => {
-        const res = await RuStorePush.check();
+        const res = await RuStorePush.checkPushAvailability();
+        console.log(res);
         if (res == null) return;
         addLog(res);
     }, []);
@@ -50,9 +52,13 @@ const App: React.FC = () => {
     }, []);
 
     const onDelete = useCallback(async () => {
-        const res = await RuStorePush.deleteToken();
-        if (res == null) return;
-        addLog(res);
+        // const res = await RuStorePush.deleteToken();
+        // if (res == null) return;
+        // addLog(res);
+    }, []);
+
+    useEffect(() => {
+        return RuStorePush.addEventListener('service', (e) => console.log(e));
     }, []);
 
     return <View style={{flex: 1, backgroundColor: '#ffffff'}}>

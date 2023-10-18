@@ -11,24 +11,28 @@ import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.Promise
 import com.facebook.react.modules.core.DeviceEventManagerModule
 
+import ru.reactnativerustorepush.deps.PushLogger
+import ru.reactnativerustorepush.deps.Constants
 import ru.rustore.sdk.pushclient.RuStorePushClient
+import ru.rustore.sdk.core.tasks.OnCompleteListener
+import ru.rustore.sdk.core.feature.model.FeatureAvailabilityResult
 
 class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
 	var ctx: ReactApplicationContext? = null
 
-    fun log(msg: String) {
+    fun log(tag: String, msg: String) {
         var context = ctx
         if (context == null) return
         var ee = context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
-        ee.emit(PUSH_LOGGER_TAG, msg)
+        ee.emit(tag, msg)
     }
 
     val receiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            val data = intent.getStringExtra("data")
+            val data = intent.getStringExtra(Constants.EXTRA_FIELD_NAME)
             if (data != null) {
-                log(data)
+                log(Constants.MESSAGING_SERVICE_TAG, data)
             }
         }
     }
@@ -50,19 +54,65 @@ class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBas
             promise.resolve("APP_NOT_FOUND")
             return
         }
-        context.registerReceiver(receiver, IntentFilter("MessagingService"))
+        context.registerReceiver(receiver, IntentFilter(Constants.MESSAGING_SERVICE_TAG))
         RuStorePushClient.init(
             application = app,
             projectId = project_id,
-            // logger = PushLogger(PUSH_LOGGER_TAG, ::log)
+            logger = PushLogger(Constants.PUSH_LOGGER_TAG, ::log)
         )
         promise.resolve(null)
 	}
 
-    override fun getName() = NAME
+    @ReactMethod
+    fun getToken(promise: Promise) {
+        RuStorePushClient.getToken().addOnCompleteListener(object : OnCompleteListener<String>{
+            override fun onFailure(throwable: Throwable) {
+                // log(throwable.stackTraceToString())
+                promise.resolve(null)
+            }
+            override fun onSuccess(result: String) {
+                promise.resolve(result)
+            }
+        })
+    }
 
-	companion object {
-		const val NAME = "RuStorePush"
-        const val PUSH_LOGGER_TAG = "PushLogger"
-	}
+    @ReactMethod
+    fun checkPushAvailability(promise: Promise) {
+        var context = ctx;
+        if (context == null) return
+        RuStorePushClient.checkPushAvailability(context.getApplicationContext()).addOnCompleteListener(object : OnCompleteListener<FeatureAvailabilityResult>{
+            override fun onSuccess(result: FeatureAvailabilityResult) {
+                when (result) {
+                    FeatureAvailabilityResult.Available -> {
+                        promise.resolve("OK")
+                    }
+                    is FeatureAvailabilityResult.Unavailable -> {
+                        promise.resolve(result.cause.toString())
+                    }
+                }
+            }
+            override fun onFailure(throwable: Throwable) {
+                promise.resolve(throwable.stackTraceToString())
+            }
+        })
+    }
+
+    @ReactMethod
+    fun deleteToken(promise: Promise) {
+        RuStorePushClient.deleteToken().addOnCompleteListener(object : OnCompleteListener<Unit> {
+            override fun onFailure(throwable: Throwable) {
+                promise.resolve(throwable.stackTraceToString());
+            }
+            override fun onSuccess(result: Unit) {
+                promise.resolve(null);
+            }
+        })
+    }
+
+    override fun getConstants(): MutableMap<String, Any> = hashMapOf(
+        "PUSH_LOGGER_TAG" to Constants.PUSH_LOGGER_TAG,
+        "MESSAGING_SERVICE_TAG" to Constants.MESSAGING_SERVICE_TAG,
+    )
+
+    override fun getName() = Constants.MODULE_NAME
 }

@@ -5,15 +5,12 @@ const LINKING_ERROR =
   '- You rebuilt the app after installing the package\n' +
   '- You are not using Expo Go\n';
 
-const RuStorePushSDK = NativeModules.RuStorePush
-  ? NativeModules.RuStorePush
-  : new Proxy(
-      {},
-      {
-        get() {
-          throw new Error(LINKING_ERROR);
-        },
-      }
-    );
+const PROXY = new Proxy({}, {
+	get() {
+		throw new Error(LINKING_ERROR);
+	},
+});
+
+const RuStorePushSDK = NativeModules.RuStorePush ? NativeModules.RuStorePush : PROXY;
 
 export default RuStorePushSDK;

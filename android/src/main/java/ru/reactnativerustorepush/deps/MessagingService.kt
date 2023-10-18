@@ -1,15 +1,17 @@
-package ru.reactnativerustorepush
+package ru.reactnativerustorepush.deps
 
 import android.content.Intent
 import ru.rustore.sdk.pushclient.messaging.model.RemoteMessage
 import ru.rustore.sdk.pushclient.messaging.service.RuStoreMessagingService
 import ru.rustore.sdk.pushclient.messaging.exception.RuStorePushClientException
 
+import ru.reactnativerustorepush.deps.Constants
+
 class MessagingService : RuStoreMessagingService() {
 
     fun log(msg: String) {
-        val intent = Intent("MessagingService")
-        intent.putExtra("data", msg)
+        val intent = Intent(Constants.MESSAGING_SERVICE_TAG)
+        intent.putExtra(Constants.EXTRA_FIELD_NAME, msg)
         sendBroadcast(intent)
     }
 
@@ -18,7 +20,6 @@ class MessagingService : RuStoreMessagingService() {
     }
 
     override fun onMessageReceived(message: RemoteMessage) {
-        log("--- Message recieved ---")
         log(message.notification.toString())
     }
 
