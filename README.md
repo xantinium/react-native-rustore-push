@@ -1,21 +1,12 @@
 # react-native-rustore-push
 
 RuStore Push SDK для React Native
+> На данный момент пакет находиться в разработке. Первый релиз планируется 01.11.2023
 
-## Installation
+## Установка
 
 ```sh
 npm install react-native-rustore-push
-```
-
-## Usage
-
-```js
-import { multiply } from 'react-native-rustore-push';
-
-// ...
-
-const result = await multiply(3, 7);
 ```
 
 ## License
