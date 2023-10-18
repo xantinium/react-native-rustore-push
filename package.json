@@ -1,10 +1,10 @@
 {
   "name": "react-native-rustore-push",
   "version": "0.1.0",
-  "description": "RuStore Push SDK for React Native",
+  "description": "RuStore Push SDK для React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
-  "types": "lib/typescript/index.d.ts",
+  "types": "lib/typescript/src/index.d.ts",
   "react-native": "src/index",
   "source": "src/index",
   "files": [
@@ -13,47 +13,66 @@
     "android",
     "ios",
     "cpp",
-    "!lib/typescript/example",
+    "*.podspec",
+    "!ios/build",
     "!android/build",
     "!android/gradle",
     "!android/gradlew",
     "!android/gradlew.bat",
     "!android/local.properties",
+    "!**/__tests__",
+    "!**/__fixtures__",
+    "!**/__mocks__",
     "!**/.*"
   ],
   "scripts": {
-    "prepack": "bob build",
-    "release": "release-it",
-    "clean": "del-cli android/build example/android/build example/android/app/build"
+    "test": "jest",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint \"**/*.{js,ts,tsx}\" --report-unused-disable-directives --max-warnings 0",
+    "clean": "del-cli android/build example/android/build example/android/app/build lib",
+    "prepare": "bob build",
+    "release": "release-it"
   },
   "keywords": [
     "react-native",
+    "rustore",
     "sdk",
     "push",
-    "rustore",
     "android"
   ],
-  "repository": "https://github.com/Xantinium/react-native-rustore-push",
-  "author": "xantinium <chapliyva@gmail.com> (https://github.com/Xantinium)",
+  "repository": "https://github.com/xantinium/react-native-rustore-push",
+  "author": "xantinium <chapliyva@gmail.com> (https://github.com/xantinium)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Xantinium/react-native-rustore-push/issues"
+    "url": "https://github.com/xantinium/react-native-rustore-push/issues"
   },
-  "homepage": "https://github.com/Xantinium/react-native-rustore-push#readme",
+  "homepage": "https://github.com/xantinium/react-native-rustore-push#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "@react-native/eslint-config": "^0.72.2",
     "@release-it/conventional-changelog": "^5.0.0",
     "@types/jest": "^28.1.2",
     "@types/react": "~17.0.21",
     "@types/react-native": "0.70.0",
     "del-cli": "^5.0.0",
+    "eslint": "^8.49.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-jsx-a11y": "^6.7.1",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "jest": "^28.1.1",
     "react": "18.2.0",
-    "react-native": "0.71.6",
+    "react-native": "0.72.6",
     "react-native-builder-bob": "^0.20.0",
     "release-it": "^15.0.0",
-    "typescript": "^4.5.2"
+    "turbo": "^1.10.7",
+    "typescript": "^5.0.2",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0"
   },
   "resolutions": {
     "@types/react": "17.0.21"
@@ -62,10 +81,17 @@
     "react": "*",
     "react-native": "*"
   },
+  "packageManager": "yarn@3.6.1",
   "engines": {
-    "node": ">= 16.0.0"
+    "node": ">= 18.0.0"
   },
-  "packageManager": "^yarn@1.22.15",
+  "jest": {
+    "preset": "react-native",
+    "modulePathIgnorePatterns": [
+      "<rootDir>/example/node_modules",
+      "<rootDir>/lib/"
+    ]
+  },
   "release-it": {
     "git": {
       "commitMessage": "chore: release ${version}",
@@ -83,6 +109,16 @@
       }
     }
   },
+  "eslintConfig": {
+    "root": true,
+    "extends": [
+      "@react-native"
+    ]
+  },
+  "eslintIgnore": [
+    "node_modules/",
+    "lib/"
+  ],
   "react-native-builder-bob": {
     "source": "src",
     "output": "lib",

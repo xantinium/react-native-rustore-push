@@ -1,11 +1,16 @@
-import init from './methods/init';
-import token from './methods/token';
-import checkPushAvailability from './methods/check';
-import events from './events';
+import { NativeModules } from 'react-native';
 
-export default {
-  	init,
-	checkPushAvailability,
-	...token,
-	...events,
-};
+const LINKING_ERROR =
+  `The package 'react-native-rustore-push' doesn't seem to be linked. Make sure: \n\n` +
+  '- You rebuilt the app after installing the package\n' +
+  '- You are not using Expo Go\n';
+
+const PROXY = new Proxy({}, {
+	get() {
+		throw new Error(LINKING_ERROR);
+	},
+});
+
+const RustorePush = NativeModules.RNRustorePush ?? PROXY;
+
+export default RustorePush;
