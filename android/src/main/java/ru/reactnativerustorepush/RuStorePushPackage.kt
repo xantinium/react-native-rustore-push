@@ -7,7 +7,7 @@ import com.facebook.react.uimanager.ViewManager
 
 import ru.reactnativerustorepush.RuStorePushModule
 
-class RuStorePushPackage : ReactPackage {
+class RuStorePushPackage: ReactPackage {
  	override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
 		return listOf(RuStorePushModule(reactContext))
 	}
