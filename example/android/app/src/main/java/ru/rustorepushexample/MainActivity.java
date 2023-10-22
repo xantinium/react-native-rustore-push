@@ -1,4 +1,4 @@
-package com.rustorepushexample;
+package ru.rustorepushexample;
 
 import com.facebook.react.ReactActivity;
 import com.facebook.react.ReactActivityDelegate;
