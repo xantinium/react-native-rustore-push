@@ -1,6 +1,5 @@
 import React from 'react';
 import { View, Text } from 'react-native';
-// import RNRustorePush from 'react-native-rustore-push';
 
 function App() {
 	return (
