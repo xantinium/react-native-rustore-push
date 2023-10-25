@@ -18,18 +18,16 @@ import ru.rustore.sdk.pushclient.RuStorePushClient
 import ru.rustore.sdk.core.tasks.OnCompleteListener
 import ru.rustore.sdk.core.feature.model.FeatureAvailabilityResult
 
-class RuStorePushModule(reactContext: ReactApplicationContext): ReactContextBaseJavaModule(reactContext) {
+class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
 	var ctx: ReactApplicationContext? = null
 
     fun log(tag: String, msg: String) {
         var context = ctx
 
-        if (context == null) {
-            return
+        if (context != null) {
+            context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java).emit(tag, msg)
         }
-
-        context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java).emit(tag, msg)
     }
 
     val receiver = object: BroadcastReceiver() {
@@ -45,24 +43,27 @@ class RuStorePushModule(reactContext: ReactApplicationContext): ReactContextBase
 	@ReactMethod
 	fun init(project_id: String, useLogger: Boolean, testMode: Boolean, promise: Promise) {
 		if (ctx != null) {
-            promise.resolve("ALREADY_INITIALIZED")
+            promise.resolve(null)
             return
         }
 
         var context = this.getReactApplicationContext()
-        ctx = context
 
-        var app: Application? = null
         var activity = this.getCurrentActivity()
 
-        if (activity != null) {
-            app = activity.getApplication()
-        }
-
-        if (app == null) {
-            promise.resolve("APP_NOT_FOUND")
+        if (activity == null) {
+            promise.resolve(null)
             return
         }
+
+        var app = activity.getApplication()
+
+        if (app == null) {
+            promise.resolve(null)
+            return
+        }
+
+        ctx = context
 
         context.registerReceiver(receiver, IntentFilter(Constants.MESSAGING_SERVICE_TAG))
 
@@ -77,20 +78,20 @@ class RuStorePushModule(reactContext: ReactApplicationContext): ReactContextBase
                 testModeEnabled = testMode,
                 logger = logger,
             )
+        } else {
+            RuStorePushClient.init(
+                application = app,
+                projectId = project_id,
+                testModeEnabled = testMode,
+            )
         }
-
-        RuStorePushClient.init(
-            application = app,
-            projectId = project_id,
-            testModeEnabled = testMode,
-        )
 
         promise.resolve(null)
 	}
 
     @ReactMethod
     fun checkPushAvailability(promise: Promise) {
-        RuStorePushClient.checkPushAvailability().addOnCompleteListener(object: OnCompleteListener<FeatureAvailabilityResult>{
+        RuStorePushClient.checkPushAvailability().addOnCompleteListener(object : OnCompleteListener<FeatureAvailabilityResult>{
             override fun onSuccess(result: FeatureAvailabilityResult) {
                 when (result) {
                     FeatureAvailabilityResult.Available -> {
@@ -104,16 +105,16 @@ class RuStorePushModule(reactContext: ReactApplicationContext): ReactContextBase
             }
 
             override fun onFailure(throwable: Throwable) {
-                promise.resolve(throwable.stackTraceToString())
+                promise.resolve(throwable.message)
             }
         })
     }
 
     @ReactMethod
     fun getToken(promise: Promise) {
-        RuStorePushClient.getToken().addOnCompleteListener(object: OnCompleteListener<String>{
+        RuStorePushClient.getToken().addOnCompleteListener(object : OnCompleteListener<String>{
             override fun onFailure(throwable: Throwable) {
-                promise.resolve(throwable.stackTraceToString())
+                promise.resolve(throwable.message)
             }
 
             override fun onSuccess(result: String) {
@@ -124,9 +125,9 @@ class RuStorePushModule(reactContext: ReactApplicationContext): ReactContextBase
 
     @ReactMethod
     fun deleteToken(promise: Promise) {
-        RuStorePushClient.deleteToken().addOnCompleteListener(object: OnCompleteListener<Unit> {
+        RuStorePushClient.deleteToken().addOnCompleteListener(object : OnCompleteListener<Unit> {
             override fun onFailure(throwable: Throwable) {
-                promise.resolve(throwable.stackTraceToString())
+                promise.resolve(throwable.message)
             }
 
             override fun onSuccess(result: Unit) {
@@ -136,10 +137,10 @@ class RuStorePushModule(reactContext: ReactApplicationContext): ReactContextBase
     }
 
     @ReactMethod
-    fun subscribeToToic(topic: String, promise: Promise) {
-        RuStorePushClient.subscribeToTopic(topic).addOnCompleteListener(object: OnCompleteListener<Unit> {
+    fun subscribeToTopic(topic: String, promise: Promise) {
+        RuStorePushClient.subscribeToTopic(topic).addOnCompleteListener(object : OnCompleteListener<Unit> {
             override fun onFailure(throwable: Throwable) {
-                promise.resolve(throwable.stackTraceToString())
+                promise.resolve(throwable.message)
             }
         
             override fun onSuccess(result: Unit) {
@@ -150,15 +151,27 @@ class RuStorePushModule(reactContext: ReactApplicationContext): ReactContextBase
 
     @ReactMethod
     fun unsubscribeFromTopic(topic: String, promise: Promise) {
-        RuStorePushClient.unsubscribeFromTopic(topic).addOnCompleteListener(object: OnCompleteListener<Unit> {
+        RuStorePushClient.unsubscribeFromTopic(topic).addOnCompleteListener(object : OnCompleteListener<Unit> {
             override fun onFailure(throwable: Throwable) {
-                promise.resolve(throwable.stackTraceToString())
+                promise.resolve(throwable.message)
             }
         
             override fun onSuccess(result: Unit) {
                 promise.resolve(null)
             }
         })
+    }
+
+    @ReactMethod
+    @Suppress("UNUSED_PARAMETER")
+    fun addListener(eventName: String) {
+        // В новой версии React Native каждый модуль должен реализовывать этот метод
+    }
+
+    @ReactMethod
+    @Suppress("UNUSED_PARAMETER")
+    fun removeListeners(count: Int) {
+        // В новой версии React Native каждый модуль должен реализовывать этот метод
     }
 
     override fun getConstants(): MutableMap<String, String> = hashMapOf(

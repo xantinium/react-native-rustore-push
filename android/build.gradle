@@ -53,7 +53,7 @@ def supportsNamespace() {
 
 android {
   if (supportsNamespace()) {
-    namespace "com.rustorepush"
+    namespace "ru.reactnativerustorepush"
 
     sourceSets {
       main {

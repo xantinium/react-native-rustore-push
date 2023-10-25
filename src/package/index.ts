@@ -39,7 +39,7 @@ export class RuStorePush {
 	}
 
 	private async withInitChech<Result>(callback: () => RuStorePushResult<Result>): RuStorePushResult<Result> {
-		if (this.isInit) {
+		if (!this.isInit) {
 			return {
 				err: RuStorePush.Errors.SDK_NOT_INITIALIZED,
 			};

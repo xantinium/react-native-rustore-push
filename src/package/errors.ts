@@ -1,6 +1,8 @@
 export enum RuStorePushErrors {
 	/** Неизвестный тип ошибки */
 	UNKNOWN_ERROR,
+	/** **RuStore SDK** пуш-уведомлений не инициализировано */
+	SDK_NOT_INITIALIZED,
 	/** **RuStore SDK** пуш-уведомлений уже инициализировано */
 	SDK_ALREADY_INITIALIZED,
 	/** Приложение **RuStore** не установлено на устройстве */
@@ -13,8 +15,6 @@ export enum RuStorePushErrors {
 	RUSTORE_UNAUTHORIZED,
 	/** Отпечаток подписи приложения не совпадает с отпечатком, добавленным в консоль разработчика */
 	APP_SIGNATURE_MISMATCH,
-	/** **RuStore SDK** пуш-уведомлений не инициализировано */
-	SDK_NOT_INITIALIZED,
 }
 
 type RuStorePushError = {

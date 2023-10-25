@@ -9,7 +9,7 @@ import ru.rustore.sdk.pushclient.common.logger.Logger
 @Serializable
 data class LogEventData(val message: String, val stackTrace: String?)
 
-class PushLogger(private val tag: String): Logger {
+class PushLogger(private val tag: String) : Logger {
     var log: ((String, String) -> Unit)? = null
 
     fun setLogFunc(logFunc: (String, String) -> Unit) {
@@ -23,7 +23,7 @@ class PushLogger(private val tag: String): Logger {
             return
         }
 
-        val stackTrace = if (throwable == null) null else throwable.stackTraceToString()
+        val stackTrace = if (throwable == null) null else throwable.message
 
         val eventData = Json.encodeToString(LogEventData(message, stackTrace))
         

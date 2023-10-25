@@ -16,7 +16,7 @@ data class NewTokenEventData(val token: String)
 @Serializable
 data class ErrorEventDataItem(val error: String)
 
-class MessagingService: RuStoreMessagingService() {
+class MessagingService : RuStoreMessagingService() {
 
     fun log(msg: String) {
         val intent = Intent(Constants.MESSAGING_SERVICE_TAG)
