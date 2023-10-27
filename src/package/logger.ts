@@ -1,14 +1,16 @@
 import { NativeEventEmitter } from 'react-native';
 
-import { type NativeModuleEvent } from './native-module';
-import { RuStorePushModule, RuStorePushNativeModule, parseEventData } from './native-module';
+import type { RuStorePushError } from './errors';
+import {
+	RuStorePushModule, RuStorePushNativeModule, parseEventPayload, parseEvent,
+} from './native-module';
 
-type LogEventData = {
-	message: string
-	stackTrace: string
+type LogEventPayload = {
+	msg: string
+	error?: RuStorePushError
 };
 
-type LogFunc = (props: LogEventData) => void;
+type LogFunc = (props: LogEventPayload) => void;
 
 export type RuStorePushLoggerProps = {
 	verbose?: LogFunc
@@ -39,12 +41,14 @@ export async function initRuStorePushLogger(props: RuStorePushLoggerProps) {
 
 	const ee = new NativeEventEmitter(RuStorePushNativeModule);
 
-	ee.addListener(constants.PUSH_LOGGER_TAG, (event: NativeModuleEvent) => {
-		if (isKnownEvent(event.name)) {
-			const listener = listeners[event.name];
+	ee.addListener(constants.PUSH_LOGGER_TAG, (event: string) => {
+		const parsedEvent = parseEvent(event);
+
+		if (parsedEvent && isKnownEvent(parsedEvent.name)) {
+			const listener = listeners[parsedEvent.name];
 
 			if (listener) {
-				const eventData = parseEventData<LogEventData>(event.data);
+				const eventData = parseEventPayload<LogEventPayload>(parsedEvent.payload);
 
 				if (eventData !== undefined) {
 					listener(eventData);

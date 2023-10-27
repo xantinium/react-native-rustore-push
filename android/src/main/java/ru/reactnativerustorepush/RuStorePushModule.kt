@@ -4,68 +4,51 @@ import android.content.Intent
 import android.content.Context
 import android.app.Application
 import android.content.IntentFilter
-import android.content.BroadcastReceiver
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.Promise
+import com.facebook.react.bridge.ReadableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
 
 import ru.reactnativerustorepush.deps.PushLogger
 import ru.reactnativerustorepush.deps.Constants
+import ru.reactnativerustorepush.deps.MessagingService
+import ru.reactnativerustorepush.deps.convertReadableMap
+import ru.reactnativerustorepush.deps.MessagingReceiver
+import ru.reactnativerustorepush.deps.createError
 import ru.rustore.sdk.pushclient.common.logger.Logger
 import ru.rustore.sdk.pushclient.RuStorePushClient
 import ru.rustore.sdk.core.tasks.OnCompleteListener
 import ru.rustore.sdk.core.feature.model.FeatureAvailabilityResult
+import ru.rustore.sdk.pushclient.messaging.model.TestNotificationPayload
 
-class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
+class RuStorePushModule(val reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext) {
 
-	var ctx: ReactApplicationContext? = null
+	var initialized = false
 
     fun log(tag: String, msg: String) {
-        var context = ctx
-
-        if (context != null) {
-            context.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java).emit(tag, msg)
-        }
-    }
-
-    val receiver = object: BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            val data = intent.getStringExtra(Constants.EXTRA_FIELD_NAME)
-
-            if (data != null) {
-                log(Constants.MESSAGING_SERVICE_TAG, data)
-            }
-        }
+        reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java).emit(tag, msg)
     }
 
 	@ReactMethod
 	fun init(project_id: String, useLogger: Boolean, testMode: Boolean, promise: Promise) {
-		if (ctx != null) {
-            promise.resolve(null)
+		if (initialized) {
+            promise.resolve(createError("Package inner error"))
             return
         }
 
-        var context = this.getReactApplicationContext()
-
-        var activity = this.getCurrentActivity()
-
-        if (activity == null) {
-            promise.resolve(null)
-            return
-        }
-
-        var app = activity.getApplication()
+        var app = this.getCurrentActivity()?.getApplication()
 
         if (app == null) {
-            promise.resolve(null)
+            promise.resolve(createError("Package inner error"))
             return
         }
 
-        ctx = context
+        initialized = true
 
-        context.registerReceiver(receiver, IntentFilter(Constants.MESSAGING_SERVICE_TAG))
+        reactContext.startService(Intent(reactContext, MessagingService::class.java))
+        reactContext.registerReceiver(MessagingReceiver(::log), IntentFilter(Constants.MESSAGING_SERVICE_TAG))
 
         if (useLogger) {
             val logger = PushLogger(Constants.PUSH_LOGGER_TAG)
@@ -95,17 +78,17 @@ class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBas
             override fun onSuccess(result: FeatureAvailabilityResult) {
                 when (result) {
                     FeatureAvailabilityResult.Available -> {
-                        promise.resolve("OK")
+                        promise.resolve(true)
                     }
 
                     is FeatureAvailabilityResult.Unavailable -> {
-                        promise.resolve(result.cause.toString())
+                        promise.resolve(createError(result.cause.toString()))
                     }
                 }
             }
 
             override fun onFailure(throwable: Throwable) {
-                promise.resolve(throwable.message)
+                promise.resolve(createError(throwable.message.toString(), throwable.getStackTrace().toString()))
             }
         })
     }
@@ -114,11 +97,11 @@ class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBas
     fun getToken(promise: Promise) {
         RuStorePushClient.getToken().addOnCompleteListener(object : OnCompleteListener<String>{
             override fun onFailure(throwable: Throwable) {
-                promise.resolve(throwable.message)
+                promise.resolve(createError(throwable.message.toString(), throwable.getStackTrace().toString()))
             }
 
-            override fun onSuccess(result: String) {
-                promise.resolve(result)
+            override fun onSuccess(token: String) {
+                promise.resolve(token)
             }
         })
     }
@@ -127,7 +110,7 @@ class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBas
     fun deleteToken(promise: Promise) {
         RuStorePushClient.deleteToken().addOnCompleteListener(object : OnCompleteListener<Unit> {
             override fun onFailure(throwable: Throwable) {
-                promise.resolve(throwable.message)
+                promise.resolve(createError(throwable.message.toString(), throwable.getStackTrace().toString()))
             }
 
             override fun onSuccess(result: Unit) {
@@ -140,7 +123,7 @@ class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBas
     fun subscribeToTopic(topic: String, promise: Promise) {
         RuStorePushClient.subscribeToTopic(topic).addOnCompleteListener(object : OnCompleteListener<Unit> {
             override fun onFailure(throwable: Throwable) {
-                promise.resolve(throwable.message)
+                promise.resolve(createError(throwable.message.toString(), throwable.getStackTrace().toString()))
             }
         
             override fun onSuccess(result: Unit) {
@@ -153,7 +136,32 @@ class RuStorePushModule(reactContext: ReactApplicationContext) : ReactContextBas
     fun unsubscribeFromTopic(topic: String, promise: Promise) {
         RuStorePushClient.unsubscribeFromTopic(topic).addOnCompleteListener(object : OnCompleteListener<Unit> {
             override fun onFailure(throwable: Throwable) {
-                promise.resolve(throwable.message)
+                promise.resolve(createError(throwable.message.toString(), throwable.getStackTrace().toString()))
+            }
+        
+            override fun onSuccess(result: Unit) {
+                promise.resolve(null)
+            }
+        })
+    }
+
+    @ReactMethod
+    fun sendTestNotification(notification: ReadableMap, promise: Promise) {
+        val title = notification.getString("title")
+        val body = notification.getString("body")
+        val imgUrl = notification.getString("imgUrl")
+        val data = notification.getMap("data")
+
+        val payload = TestNotificationPayload(
+            title = if (title != null) title else "",
+            body = if (body != null) body else "",
+            imgUrl = if (imgUrl != null) imgUrl else "",
+            data = if (data != null) convertReadableMap(data) else mapOf(),
+        )
+
+        RuStorePushClient.sendTestNotification(payload).addOnCompleteListener(object : OnCompleteListener<Unit> {
+            override fun onFailure(throwable: Throwable) {
+                promise.resolve(createError(throwable.message.toString(), throwable.getStackTrace().toString()))
             }
         
             override fun onSuccess(result: Unit) {

@@ -1,9 +1,10 @@
+import type { NotificationPayload } from './native-module';
+import type { RuStorePushResult } from './errors';
+import type { RuStorePushLoggerProps } from './logger';
+import { isError } from './errors';
 import { RuStorePushModule } from './native-module';
-import { type RuStorePushResult } from './errors';
-import { RuStorePushErrors, isError } from './errors';
-import MessagingService from './messaging-service';
-import { type RuStorePushLoggerProps } from './logger';
 import { initRuStorePushLogger } from './logger';
+import MessagingService from './messaging-service';
 
 export type RuStorePushProps = {
 	/** ID проекта */
@@ -41,18 +42,18 @@ export class RuStorePush {
 	private async withInitChech<Result>(callback: () => RuStorePushResult<Result>): RuStorePushResult<Result> {
 		if (!this.isInit) {
 			return {
-				err: RuStorePush.Errors.SDK_NOT_INITIALIZED,
+				msg: 'Need to initialize RuStore SDK',
 			};
 		}
 
 		return callback();
 	}
 
-	/** Инициализировать **RuStore SDK** пуш-уведомлений. Побочным эффектом является получение пуш-токена. */
-	async init(): RuStorePushResult<string> {
+	/** Инициализировать **RuStore SDK** пуш-уведомлений. */
+	async init(): RuStorePushResult<null> {
 		if (this.isInit) {
 			return {
-				err: RuStorePush.Errors.SDK_ALREADY_INITIALIZED,
+				msg: 'RuStore SDK already initialized',
 			};
 		}
 
@@ -90,7 +91,7 @@ export class RuStorePush {
 	}
 
 	/** Удалить текущий пуш-токен. */
-	async deleteToken(): RuStorePushResult<undefined> {
+	async deleteToken(): RuStorePushResult<null> {
 		const callback = RuStorePushModule.deleteToken;
 
 		return this.withInitChech(callback);
@@ -100,7 +101,7 @@ export class RuStorePush {
 	 * Подписаться на пуш-топик.
 	 * @param topic Название пуш-топика
 	 */
-	async subscribeToTopic(topic: string): RuStorePushResult<undefined> {
+	async subscribeToTopic(topic: string): RuStorePushResult<null> {
 		const callback = () => RuStorePushModule.subscribeToTopic(topic);
 
 		return this.withInitChech(callback);
@@ -110,14 +111,29 @@ export class RuStorePush {
 	 * Отписаться от пуш-топика.
 	 * @param topic Название пуш-топика
 	 */
-	async unsubscribeFromTopic(topic: string): RuStorePushResult<undefined> {
+	async unsubscribeFromTopic(topic: string): RuStorePushResult<null> {
 		const callback = () => RuStorePushModule.unsubscribeFromTopic(topic);
 
 		return this.withInitChech(callback);
 	}
 
-	/** Список возможных ошибок */
-	static readonly Errors = RuStorePushErrors;
+	/**
+	 * Отправить тестовое пуш-уведомление.
+	 * @param notificationPayload Параметры тестового пуш-уведомления
+	 */
+	async sendTestNotification(notificationPayload: NotificationPayload): RuStorePushResult<null> {
+		const callback = async (): RuStorePushResult<null> => {
+			if (!this.testModeEnabled) {
+				return {
+					msg: 'Test mode must be enabled',
+				};
+			}
+
+			return RuStorePushModule.sendTestNotification(notificationPayload);
+		};
+
+		return this.withInitChech(callback);
+	}
 
 	/** Вспомогательная функция: определяет, является ли переданная структура ошибкой. */
 	static readonly isError = isError;

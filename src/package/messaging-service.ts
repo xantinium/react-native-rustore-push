@@ -1,14 +1,18 @@
 import { NativeEventEmitter } from 'react-native';
 
-import type { RuStorePushErrors } from './errors';
-import { type NativeModuleEvent } from './native-module';
-import { RuStorePushModule, RuStorePushNativeModule, parseEventData } from './native-module';
+import {
+	RuStorePushModule, RuStorePushNativeModule, parseEventPayload, parseEvent,
+} from './native-module';
 
+/** Приоритет пуш-уведомления */
 enum Priority {
 	UNKNOWN,
 	HIGH,
 	NORMAL,
 }
+
+/** Пуш-токен */
+type Token = string;
 
 type Notification = {
 	/** Заголовок уведомления */
@@ -50,10 +54,10 @@ type RemoteMessage = {
 }
 
 type EventListeners = {
-	'new-token': string
+	'new-token': Token
 	'message-received': RemoteMessage
 	'deleted-messages': null
-	'error': RuStorePushErrors[]
+	'error': string[]
 };
 
 type EventName = keyof EventListeners;
@@ -63,16 +67,7 @@ type EventListenerObject<Name extends EventName> = {
 	handler(data: EventListeners[Name]): void
 };
 
-const EVENTS: Array<EventName> = [
-	'new-token',
-	'message-received',
-	'deleted-messages',
-	'error',
-];
-
-function isKnownEvent(eventName: string): eventName is EventName {
-	return (EVENTS as Array<string>).includes(eventName);
-}
+type UnsubscribeFunction = () => void;
 
 class MessagingService {
 	private listeners: Array<EventListenerObject<EventName>>;
@@ -89,16 +84,18 @@ class MessagingService {
 	private async init() {
 		const constants = await RuStorePushModule.getConstants();
 
-		this.ee.addListener(constants.MESSAGING_SERVICE_TAG, (event: NativeModuleEvent) => {
-			if (isKnownEvent(event.name)) {
+		this.ee.addListener(constants.MESSAGING_SERVICE_TAG, (event: string) => {
+			const parsedEvent = parseEvent(event);
+
+			if (parsedEvent) {
 				this.listeners.forEach((listener) => {
 					const { name, handler } = listener;
 
-					if (event.name === name) {
-						const eventData = parseEventData<EventListeners[typeof name]>(event.data);
+					if (parsedEvent.name === name) {
+						const payload = parseEventPayload<EventListeners[typeof name]>(parsedEvent.payload);
 
-						if (eventData !== undefined) {
-							handler(eventData);
+						if (payload !== undefined) {
+							handler(payload);
 						}
 					}
 				});
@@ -128,6 +125,7 @@ class MessagingService {
 	 * 4. **`error`** - будет вызван при возникновении ошибки в момент инициализации.
 	 * @param event Имя события
 	 * @param listener Обработчик
+	 * @returns Функция для уничтожения созданного обработчика
 	 */
 	on<Event extends EventName>(event: Event, listener: (data: EventListeners[Event]) => void) {
 		const listenerObj: EventListenerObject<Event> = {
@@ -137,9 +135,11 @@ class MessagingService {
 
 		this.listeners.push(listenerObj);
 
-		return () => {
-			this.listeners = this.listeners.filter((el) => el.name !== event);
+		const unsubscribe: UnsubscribeFunction = () => {
+			this.listeners = this.listeners.filter((el) => el !== listenerObj);
 		};
+
+		return unsubscribe;
 	}
 
 	/** Уничтожить все обработчики событий. */

@@ -9,6 +9,8 @@ function log(msg: unknown) {
 	console.log(msg);
 }
 
+const TEST_MODE_ENABLED = false;
+
 const ruStorePush = new RuStorePush({
 	projectId: 'P3QOyAAXksYtwWGMZax0Iw7KbuVIQd3B',
 	loggerProps: {
@@ -28,6 +30,7 @@ const ruStorePush = new RuStorePush({
 			log(props);
 		},
 	},
+	testModeEnabled: TEST_MODE_ENABLED,
 });
 
 ruStorePush.messagingService.on('new-token', (data) => {
@@ -101,6 +104,22 @@ function App() {
 					});
 				}}
 			/>
+			{TEST_MODE_ENABLED && (
+				<Button
+					title="Отправить тестовое пуш-уведомление"
+					onPress={() => {
+						ruStorePush.sendTestNotification({
+							title: 'test title',
+							body: 'test body',
+							data: {
+								roomId: '123',
+							},
+						}).then((result) => {
+							log(result);
+						});
+					}}
+				/>
+			)}
 			{Number(Platform.Version) >= 33 && (
 				<Button
 					title="Запросить разрешение на пуши"
