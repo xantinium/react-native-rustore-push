@@ -1,7 +1,7 @@
 {
   "name": "react-native-rustore-push",
   "version": "0.9.1",
-  "description": "RuStore Push SDK для React Native",
+  "description": "Имплементация RuStore SDK пуш-уведомлений для React Native",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/src/index.d.ts",
