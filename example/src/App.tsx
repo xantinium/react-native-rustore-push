@@ -12,7 +12,7 @@ function log(msg: unknown) {
 const TEST_MODE_ENABLED = false;
 
 const ruStorePush = new RuStorePush({
-	projectId: '<YOUR-PUSH-TOKEN>',
+	projectId: '<YOUR-PROJECT-ID>',
 	loggerProps: {
 		verbose(props) {
 			log(props);
